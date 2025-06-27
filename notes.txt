@@ -1,0 +1,158 @@
+Great! Let’s start building the **"ShopEase" Django Online Shopping Site** step-by-step. Below is a **starter guide with code and folder structure** to get your project up and running.
+
+---
+
+## 🛠 Step-by-Step Guide to Start ShopEase
+
+### ✅ 1. **Set Up Your Environment**
+
+```bash
+python -m venv venv
+source venv/bin/activate   # For Linux/macOS
+venv\Scripts\activate      # For Windows
+
+pip install django
+django-admin startproject shopease
+cd shopease
+python manage.py startapp accounts
+python manage.py startapp products
+python manage.py startapp cart
+python manage.py startapp orders
+```
+
+Then add these to `INSTALLED_APPS` in `shopease/settings.py`:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'accounts',
+    'products',
+    'cart',
+    'orders',
+    'django.contrib.staticfiles',
+]
+```
+stashing karna hai kuch bhi
+---
+
+### ✅ 2. **Models Overview**
+
+#### `products/models.py`:
+
+```python
+from django.db import models
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    image = models.ImageField(upload_to='product_images/')
+    stock = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name
+```
+
+#### `orders/models.py`:
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+from products.models import Product
+
+class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    ordered_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=100, choices=[
+        ('Pending', 'Pending'),
+        ('Shipped', 'Shipped'),
+        ('Delivered', 'Delivered')
+    ])
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name}"
+```
+
+---
+
+### ✅ 3. **Cart Logic (Basic Session Cart)**
+
+#### `cart/views.py` (snippet):
+
+```python
+def add_to_cart(request, product_id):
+    cart = request.session.get('cart', {})
+    cart[product_id] = cart.get(product_id, 0) + 1
+    request.session['cart'] = cart
+    return redirect('product_list')
+```
+
+---
+
+### ✅ 4. **Templates Directory**
+
+Create this structure:
+
+```
+shopease/
+│
+├── templates/
+│   ├── base.html
+│   ├── products/
+│   │   ├── product_list.html
+│   └── cart/
+│       └── view_cart.html
+```
+
+---
+
+### ✅ 5. **URL Routing Example**
+
+#### `shopease/urls.py`:
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('products/', include('products.urls')),
+    path('cart/', include('cart.urls')),
+]
+```
+
+---
+
+### ✅ 6. **Serving Images (in dev)**
+
+Add this to `settings.py`:
+
+```python
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+```
+
+And in `urls.py`:
+
+```python
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+---
+
+### ✅ 7. **Migrations and Run**
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Visit: [http://127.0.0.1:8000/products/](http://127.0.0.1:8000/products/)
+
